@@ -10,6 +10,8 @@ const App = () => {
   const [stock, setStock] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newItem, setNewItem] = useState({ nama: '', stok: '' });
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [tempStock, setTempStock] = useState(null);
 
   useEffect(() => {
     axios
@@ -65,9 +67,35 @@ const App = () => {
     }
   };
 
+  const handleDelete = async (itemId) => {
+    // Menambahkan konfirmasi sebelum menghapus
+    const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus barang ini?");
+    if (isConfirmed) {
+      try {
+        const response = await axios.delete(`${API_BASE_URL}?id=${itemId}`);
+        if (response.status === 200) {
+          setStock(stock.filter((item) => item.id_barang !== itemId));
+          alert("Barang berhasil dihapus!");
+        }
+      } catch (error) {
+        console.error('Gagal menghapus barang:', error);
+      }
+    }
+  };
+
   const filteredStock = stock.filter((item) =>
     item.nama.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEdit = (itemId, currentStock) => {
+    if (editingItemId === itemId) {
+      handleStockUpdate(itemId, tempStock);
+      setEditingItemId(null);
+    } else {
+      setEditingItemId(itemId);
+      setTempStock(currentStock);
+    }
+  };
 
   return (
     <div className="container">
@@ -98,25 +126,19 @@ const App = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="input"
       />
-      <StockTable stock={filteredStock} handleStockUpdate={handleStockUpdate} />
+      <StockTable 
+        stock={filteredStock} 
+        handleEdit={handleEdit} 
+        editingItemId={editingItemId}
+        tempStock={tempStock}
+        setTempStock={setTempStock}
+        handleDelete={handleDelete}
+      />
     </div>
   );
 };
 
-const StockTable = ({ stock, handleStockUpdate }) => {
-  const [editingItemId, setEditingItemId] = useState(null);
-  const [tempStock, setTempStock] = useState(null);
-//Mode Edit
-  const handleEdit = (itemId, currentStock) => {
-    if (editingItemId === itemId) {
-      handleStockUpdate(itemId, tempStock);
-      setEditingItemId(null);
-    } else {
-      setEditingItemId(itemId);
-      setTempStock(currentStock);
-    }
-  };
-
+const StockTable = ({ stock, handleEdit, editingItemId, tempStock, setTempStock, handleDelete }) => {
   return (
     <div className="table-container">
       <h2 className="header">Stok Barang</h2>
@@ -148,11 +170,26 @@ const StockTable = ({ stock, handleStockUpdate }) => {
                   )}
                 </td>
                 <td className="table-cell">
+                  {editingItemId === item.id_barang ? (
+                    <button
+                      onClick={() => handleEdit(item.id_barang, item.stok)}
+                      className="table-button"
+                    >
+                      Simpan
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleEdit(item.id_barang, item.stok)}
+                      className="table-button"
+                    >
+                      Edit
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleEdit(item.id_barang, item.stok)}
-                    className="table-button"
+                    onClick={() => handleDelete(item.id_barang)}
+                    className="table-button table-button-danger"
                   >
-                    {editingItemId === item.id_barang ? 'Simpan' : 'Edit'}
+                    Hapus
                   </button>
                 </td>
               </tr>
