@@ -5,13 +5,14 @@ const API_BASE_URL = 'http://localhost/crud_inventaris/crud.php'; // File PHP
 
 const App = () => {
   const [stock, setStock] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     axios
       .get(`${API_BASE_URL}`)
       .then((response) => setStock(response.data))
       .catch((error) => console.error('Gagal memuat data stok:', error));
-  });
+  }, []);
 
   const handleStockUpdate = async (itemId) => {
     const item = stock.find((item) => item.id_barang === itemId);
@@ -62,13 +63,24 @@ const App = () => {
     }
   };
 
+  const filteredStock = stock.filter((item) =>
+    item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ padding: '20px' }}>
       <h1>Manajemen Stok Gudang</h1>
       <button onClick={handleAddNewItem} style={{ margin: '10px 0', padding: '10px', backgroundColor: '#4CAF50', color: 'white', border: 'none', cursor: 'pointer' }}>
         Tambah Barang Baru
       </button>
-      <StockTable stock={stock} handleStockUpdate={handleStockUpdate} />
+      <input
+        type="text"
+        placeholder="Cari barang..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{margin: '10px 0', padding: '10px', width: '100%', boxSizing: 'border-box', }}
+      />
+      <StockTable stock={filteredStock} handleStockUpdate={handleStockUpdate} />
     </div>
   );
 };
