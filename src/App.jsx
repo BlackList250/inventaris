@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './index.css';
+import './style.css';
+import './output.css';
 
 const API_BASE_URL = 'http://localhost/crud_inventaris/crud.php'; // File PHP
 
 const App = () => {
   const [stock, setStock] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [newItem, setNewItem] = useState({ nama: '', stok: '' });
 
   useEffect(() => {
     axios
@@ -14,52 +18,50 @@ const App = () => {
       .catch((error) => console.error('Gagal memuat data stok:', error));
   }, []);
 
-  const handleStockUpdate = async (itemId) => {
-    const item = stock.find((item) => item.id_barang === itemId);
-    const newStock = prompt(`Masukkan stok baru untuk ${item.nama}:`, item.stok);
+  const handleStockUpdate = async (itemId, newStock) => {
+    if (newStock !== '') {
+      try {
+        const item = stock.find((item) => item.id_barang === itemId);
+        const response = await axios.put(API_BASE_URL, {
+          id: itemId,
+          nama: item.nama,
+          stok: parseInt(newStock, 10),
+        });
 
-    if (newStock !== null) {
-      const confirmed = window.confirm(`Konfirmasi perubahan stok ${item.nama} menjadi ${newStock}`);
-      if (confirmed) {
-        try {
-          const response = await axios.put(API_BASE_URL, {
-            id: itemId,
-            nama: item.nama,
-            stok: parseInt(newStock, 10),
-          });
-
-          if (response.status === 200) {
-            setStock((prevStock) =>
-              prevStock.map((item) =>
-                item.id_barang === itemId ? { ...item, stok: parseInt(newStock, 10) } : item
-              )
-            );
-          }
-        } catch (error) {
-          console.error('Gagal update stok.', error);
+        if (response.status === 200) {
+          setStock((prevStock) =>
+            prevStock.map((item) =>
+              item.id_barang === itemId ? { ...item, stok: parseInt(newStock, 10) } : item
+            )
+          );
+          alert("Stok berhasil diperbarui!");
         }
+      } catch (error) {
+        console.error('Gagal update stok.', error);
       }
+    } else {
+      alert("Stok tidak boleh kosong!");
     }
   };
 
   const handleAddNewItem = async () => {
-    const nama = prompt('Masukkan nama barang baru:');
-    const stok = prompt('Masukkan jumlah stok barang baru:');
-
-    if (nama && stok) {
+    if (newItem.nama && newItem.stok) {
       try {
         const response = await axios.post(API_BASE_URL, {
-          nama,
-          stok: parseInt(stok, 10),
+          nama: newItem.nama,
+          stok: parseInt(newItem.stok, 10),
         });
 
         if (response.status === 200) {
-          setStock([...stock, { id_barang: response.data.id, nama, stok: parseInt(stok, 10), }]);
+          setStock([...stock, { id_barang: response.data.id, ...newItem }]);
+          setNewItem({ nama: '', stok: '' });
           alert('Barang berhasil ditambahkan!');
         }
       } catch (error) {
         console.error('Gagal menambah barang:', error);
       }
+    } else {
+      alert('Harap mengisi semua data barang!');
     }
   };
 
@@ -68,49 +70,98 @@ const App = () => {
   );
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Manajemen Stok Gudang</h1>
-      <button onClick={handleAddNewItem} style={{ margin: '10px 0', padding: '10px', backgroundColor: '#4CAF50', color: 'white', border: 'none', cursor: 'pointer' }}>
-        Tambah Barang Baru
-      </button>
+    <div className="container">
+      <h1 className="header">Manajemen Stok Gudang</h1>
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Nama barang baru"
+          value={newItem.nama}
+          onChange={(e) => setNewItem({ ...newItem, nama: e.target.value })}
+          className="input mb-4"
+        />
+        <input
+          type="number"
+          placeholder="Stok barang baru"
+          value={newItem.stok}
+          onChange={(e) => setNewItem({ ...newItem, stok: e.target.value })}
+          className="input mb-4"
+        />
+        <button onClick={handleAddNewItem} className="button">
+          Tambah Barang Baru
+        </button>
+      </div>
       <input
         type="text"
         placeholder="Cari barang..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        style={{margin: '10px 0', padding: '10px', width: '100%', boxSizing: 'border-box', }}
+        className="input"
       />
       <StockTable stock={filteredStock} handleStockUpdate={handleStockUpdate} />
     </div>
   );
 };
 
-const StockTable = ({ stock, handleStockUpdate }) => (
-  <div>
-    <h2>Stok Barang</h2>
-    <table border="1" width="100%" style={{ textAlign: 'left' }}>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nama Barang</th>
-          <th>Stok</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        {stock.map((item) => (
-          <tr key={item.id_barang}>
-            <td>{item.id_barang}</td>
-            <td>{item.nama}</td>
-            <td>{item.stok}</td>
-            <td>
-              <button onClick={() => handleStockUpdate(item.id_barang)}>Edit Stok</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+const StockTable = ({ stock, handleStockUpdate }) => {
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [tempStock, setTempStock] = useState(null);
+//Mode Edit
+  const handleEdit = (itemId, currentStock) => {
+    if (editingItemId === itemId) {
+      handleStockUpdate(itemId, tempStock);
+      setEditingItemId(null);
+    } else {
+      setEditingItemId(itemId);
+      setTempStock(currentStock);
+    }
+  };
+
+  return (
+    <div className="table-container">
+      <h2 className="header">Stok Barang</h2>
+      <div className="overflow-auto max-h-64">
+        <table className="table">
+          <thead className="table-head">
+            <tr>
+              <th className="table-cell">ID</th>
+              <th className="table-cell">Nama Barang</th>
+              <th className="table-cell">Stok</th>
+              <th className="table-cell">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stock.map((item) => (
+              <tr key={item.id_barang} className="table-row">
+                <td className="table-cell">{item.id_barang}</td>
+                <td className="table-cell">{item.nama}</td>
+                <td className="table-cell">
+                  {editingItemId === item.id_barang ? (
+                    <input
+                      type="number"
+                      value={tempStock}
+                      onChange={(e) => setTempStock(e.target.value)}
+                      className="input w-20"
+                    />
+                  ) : (
+                    <span>{item.stok}</span>
+                  )}
+                </td>
+                <td className="table-cell">
+                  <button
+                    onClick={() => handleEdit(item.id_barang, item.stok)}
+                    className="table-button"
+                  >
+                    {editingItemId === item.id_barang ? 'Simpan' : 'Edit'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 export default App;
