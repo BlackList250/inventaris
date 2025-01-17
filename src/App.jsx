@@ -68,7 +68,6 @@ const App = () => {
   };
 
   const handleDelete = async (itemId) => {
-    // Menambahkan konfirmasi sebelum menghapus
     const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus barang ini?");
     if (isConfirmed) {
       try {
@@ -187,7 +186,7 @@ const StockTable = ({ stock, handleEdit, editingItemId, tempStock, setTempStock,
                   )}
                   <button
                     onClick={() => handleDelete(item.id_barang)}
-                    className="table-button table-button-danger"
+                    className="table-button-danger"
                   >
                     Hapus
                   </button>

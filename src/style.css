@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex justify-center items-center;
+  @apply bg-gradient-to-r from-blue-500 to-yellow-600 min-h-screen flex justify-center items-center;
 }
 
 .container {
-  @apply bg-white rounded-lg shadow-lg p-8 w-3/4 max-w-4xl;
+  @apply bg-yellow-300 rounded-lg shadow-lg p-8 w-full max-w-4xl;
 }
 
 .header {
@@ -15,7 +15,7 @@ body {
 }
 
 .button {
-  @apply mb-4 px-6 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600;
+  @apply mb-4 px-6 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500;
 }
 
 .input {
@@ -23,7 +23,7 @@ body {
 }
 
 .table-container {
-  @apply text-center;
+  @apply text-center mt-6;
 }
 
 .table {
@@ -31,7 +31,7 @@ body {
 }
 
 .table-head {
-  @apply bg-gray-100;
+  @apply bg-gray-100 text-gray-700;
 }
 
 .table-row {
@@ -39,13 +39,13 @@ body {
 }
 
 .table-cell {
-  @apply border border-gray-400 px-4 py-2;
+  @apply border border-gray-400 px-4 py-2 text-sm text-gray-700;
 }
 
 .table-button {
-  @apply px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600;
+  @apply px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
 
-.table-container {
-  @apply mt-6;
+.table-button-danger {
+  @apply px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500;
 }
